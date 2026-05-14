@@ -34,6 +34,7 @@
 	"B03": "Clear",
 	"B04": "Set",
 	"B05": "Update",
+	"B06": "Hold to reset",
 	"I00": "off",
 	"I01": "bootloader",
 	"I02": "firmware",

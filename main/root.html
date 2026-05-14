@@ -108,6 +108,23 @@ button:hover {
 button:active {
 	background: var(--ccc);
 }
+#reset {
+	background-image: linear-gradient(to right, var(--red), var(--red));
+	background-repeat: no-repeat;
+	background-size: 0% 100%;
+	-webkit-user-select: none;
+	user-select: none;
+	-webkit-touch-callout: none;
+}
+#reset.armed {
+	border-color: var(--red);
+	color: var(--red);
+}
+#reset.holding {
+	background-size: 100% 100%;
+	color: var(--fff);
+	transition: background-size 1.5s linear;
+}
 textarea {
 	height: 8em;
 	width: 20em;
@@ -216,7 +233,7 @@ progress {
 		<table class="show" id="show"></table>
 		<p>
 			<button data-lang="B00" onclick="savecfg()"></button>
-			<button data-lang="B01" onclick="resetcfg()"></button>
+			<button id="reset" data-lang="B01" onclick="resetcfg()" onpointerdown="resetstart(event)" onpointerup="resetend()" onpointerleave="resetend()" onpointercancel="resetend()"></button>
 			<span class="result" id="result1"></span>
 		</p>
 		<hr>
@@ -639,8 +656,49 @@ function savecfg() {
 	send('save\n');
 }
 
+let resetArmed, resetDone, resetDisarm, resetHold;
+
+function disarmreset() {
+	clearTimeout(resetDisarm);
+	clearTimeout(resetHold);
+	resetArmed = false;
+	const btn = document.getElementById('reset');
+	btn.classList.remove('armed', 'holding');
+	btn.setAttribute('data-lang', 'B01');
+	btn.innerHTML = strs['B01'] || '';
+}
+
 function resetcfg() {
-	send('reset\n');
+	if (resetDone) {
+		resetDone = false;
+		return;
+	}
+	if (resetArmed) return;
+	resetArmed = true;
+	const btn = document.getElementById('reset');
+	btn.classList.add('armed');
+	btn.setAttribute('data-lang', 'B06');
+	btn.innerHTML = strs['B06'] || '';
+	resetDisarm = setTimeout(disarmreset, 3000);
+}
+
+function resetstart(e) {
+	if (!resetArmed) return;
+	e.preventDefault();
+	clearTimeout(resetDisarm);
+	document.getElementById('reset').classList.add('holding');
+	resetHold = setTimeout(() => {
+		send('reset\n');
+		resetDone = true;
+		disarmreset();
+	}, 1500);
+}
+
+function resetend() {
+	if (!resetArmed) return;
+	clearTimeout(resetHold);
+	document.getElementById('reset').classList.remove('holding');
+	resetDisarm = setTimeout(disarmreset, 3000);
 }
 
 function parsemusic() {
